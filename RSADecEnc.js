@@ -54,6 +54,13 @@ async function decryptRSA(ciphertext, privateKey) {
 	return plaintext;
 }
 
+async function encryptRSA(text, publicKey) {
+	const encrypted = await crypto.subtle.encrypt({
+		name: 'RSA-OAEP'
+	}, publicKey, text);
+	return arrayBufferToBase64(encrypted);
+}
+
 function arrayBufferToBase64(buffer) {
 	let binary = '';
 	const bytes = new Uint8Array(buffer);
