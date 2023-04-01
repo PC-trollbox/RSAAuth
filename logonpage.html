@@ -44,7 +44,7 @@
                     localStorage.setItem("pubk", pubkey_data);
                     let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
                     if (!result.ok) {
-                        alert("error in RSAAuth:\n" + await result.text())
+                        alert("error in RSAAuth: " + result.statusText + "\n" + await result.text())
                         el.disabled = false;
                         pubkey.disabled = false;
                         privkey.disabled = false;
@@ -76,7 +76,7 @@
                 let keyp = await importKeyPair(pubkey_data, privkey_data);
                 let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
                 if (!result.ok) {
-                    alert("error in RSAAuth:\n" + await result.text())
+                    alert("error in RSAAuth: " + result.statusText + "\n" + await result.text())
                     el.disabled = false;
                     pubkey.disabled = false;
                     privkey.disabled = false;

@@ -19,11 +19,15 @@ app.get("/imagination.js", function(req, res) {
 
 app.get("/getEncryptedSecret", function(req, res) {
     if (req.query.pubkey != fs.readFileSync(__dirname + "/pubkey.key").toString()) return res.status(401).send("Invalid Pubkey");
-    res.send(crypto.publicEncrypt({
-        key: req.query.pubkey,
-        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
-        oaepHash: 'sha256'
-    }, Buffer.from(fs.readFileSync(__dirname + "/secrettoken").toString(), "utf-8")).toString("base64"));
+    try {
+        res.send(crypto.publicEncrypt({
+            key: req.query.pubkey,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            oaepHash: 'sha256'
+        }, Buffer.from(fs.readFileSync(__dirname + "/secrettoken").toString(), "utf-8")).toString("base64"));
+    } catch {
+        res.status(500).send("Something went terribly wrong when encrypting the secret token");
+    }
 })
 
 app.listen(3000, function() {
