@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <title>RSA Auth Tester</title>
+        <link rel="stylesheet" href="style.css"></link>
     </head>
     <body>
         <h1>Imagination Auth</h1>
@@ -20,6 +21,16 @@
         </div>
         <hr>
         <a href="/registerPubKey">Restore a forgotten key for this POC</a>
+        <div hidden id="overlay"></div>
+        <div id="modal_window" hidden>
+            <center>
+                <h1>
+                    The system is logging you in
+                    <br>
+                    <progress></progress>
+                </h1>
+            </center>
+        </div>
         <script src="/sjcl.js"></script>
         <script src="/imagination.js"></script>
         <script>
@@ -38,6 +49,8 @@
                 pubkey.disabled = true;
                 privkey.disabled = true;
                 keyless_auth.disabled = true;
+                overlay.hidden = false;
+                modal_window.hidden = false;
                 let reader = new FileReader();
                 reader.readAsText(pubkey.files[0]);
                 reader.onload = async function(event) {
@@ -45,11 +58,13 @@
                     localStorage.setItem("pubk", pubkey_data);
                     let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
                     if (!result.ok) {
-                        alert("error in RSAAuth: " + result.statusText + "\n" + await result.text())
+                        alert("error in RSAAuth: " + result.statusText + "\n" + await result.text());
                         el.disabled = false;
                         pubkey.disabled = false;
                         privkey.disabled = false;
                         keyless_auth.disabled = false;
+                        overlay.hidden = true;
+                        modal_window.hidden = true;
                         return;
                     }
                     reader = new FileReader();
@@ -63,6 +78,12 @@
                             location.href = "/?token=" + encodeURIComponent(token);
                         } catch (e) {
                             alert("error in RSAAuth decryption:\n" + e.toString());
+                            el.disabled = false;
+                            pubkey.disabled = false;
+                            privkey.disabled = false;
+                            keyless_auth.disabled = false;
+                            overlay.hidden = true;
+                            modal_window.hidden = true;
                         }
                     }
                 };
@@ -72,6 +93,8 @@
                 pubkey.disabled = true;
                 privkey.disabled = true;
                 keyed_auth.disabled = true;
+                overlay.hidden = false;
+                modal_window.hidden = false;
                 let pubkey_data = localStorage.getItem("pubk");
                 let privkey_data = localStorage.getItem("privk");
                 let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
@@ -81,6 +104,8 @@
                     pubkey.disabled = false;
                     privkey.disabled = false;
                     keyed_auth.disabled = false;
+                    overlay.hidden = true;
+                    modal_window.hidden = true;
                     return;
                 }
                 if (privkey_data.startsWith("encrypted:")) {
@@ -91,12 +116,20 @@
                         pubkey.disabled = false;
                         privkey.disabled = false;
                         keyed_auth.disabled = false;
+                        overlay.hidden = true;
+                        modal_window.hidden = true;
                         return;
                     }
                     try {
                         privkey_data = sjcl.decrypt(password, privkey_data.replace("encrypted:", ""));
                     } catch (e) {
                         alert("error in RSAAuth key decryption:\n" + e.toString());
+                        el.disabled = false;
+                        pubkey.disabled = false;
+                        privkey.disabled = false;
+                        keyed_auth.disabled = false;
+                        overlay.hidden = true;
+                        modal_window.hidden = true;
                     }
                 }
                 let keyp = await importKeyPair(pubkey_data, privkey_data);
@@ -105,6 +138,12 @@
                     location.href = "/?token=" + encodeURIComponent(token);
                 } catch (e) {
                     alert("error in RSAAuth decryption:\n" + e.toString());
+                    el.disabled = false;
+                    pubkey.disabled = false;
+                    privkey.disabled = false;
+                    keyed_auth.disabled = false;
+                    overlay.hidden = true;
+                    modal_window.hidden = true;
                 }
             }
             let notifiedOfInsecure = false;

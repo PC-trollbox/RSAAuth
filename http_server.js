@@ -34,6 +34,10 @@ app.get("/sjcl.js", function(req, res) {
     res.sendFile(__dirname + "/sjcl.js");
 });
 
+app.get("/style.css", function(req, res) {
+    res.sendFile(__dirname + "/style.css");
+});
+
 app.listen(3000, function() {
     console.log("It took years of preparation to finally do this POC.");
 });

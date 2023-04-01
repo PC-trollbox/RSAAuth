@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <title>RSA Auth PubKey Uploader</title>
+        <link rel="stylesheet" href="/style.css"></link>
     </head>
     <body>
         <a href="/">Back to logon</a>
@@ -18,6 +19,16 @@
             <input name="pubkey" placeholder="Input your pubkey" required></input>
             <button>Register</button>
         </form>
+        <div hidden id="overlay"></div>
+        <div id="modal_window" hidden>
+            <center>
+                <h1>
+                    The system is registering your new public key
+                    <br>
+                    <progress></progress>
+                </h1>
+            </center>
+        </div>
         <script src="/imagination.js"></script>
         <script>
             function keyHash(k1) {
@@ -32,6 +43,8 @@
             }
             async function useImagination(el) {
                 el.disabled = true;
+                overlay.hidden = false;
+                modal_window.hidden = false;
                 onbeforeunload = () => false;
                 alert("Only get back to logon as soon as the button re-enables.");
                 let newkeypair = await generateKeyPair();
@@ -55,6 +68,8 @@
                 await fetch("/registerPubKey?pubkey=" + encodeURIComponent(newkeypair.publicKeyPem));
                 hash.innerText = keyHash(newkeypair.publicKeyPem + newkeypair.privateKeyPem);
                 el.disabled = false;
+                overlay.hidden = true;
+                modal_window.hidden = true;
                 onbeforeunload = null;
             }
             setInterval(function() {
