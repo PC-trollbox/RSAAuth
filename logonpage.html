@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>RSA Auth Tester</title>
+    </head>
+    <body>
+        <h1>Imagination Auth</h1>
+        <br>
+        <div hidden id="keyless_auth_container">
+            <button onclick="imaginationAuthWithoutKey(this)" id="keyless_auth">Auth with Imagination automatically</button>
+            <br>
+            Previous key ID: <label id="prevKeyId"></label>
+            <hr>
+            <button onclick="openKeyed(this)">Use other keys</button>
+        </div>
+        <div id="keyed_auth_container">
+            Insert a public key (labelled SEND_TO_SERVER.key): <input type="file" id="pubkey"> <br>
+            Insert a private key (labelled KEEP_SECRET.key): <input type="file" id="privkey"> <br>
+            <button onclick="imaginationAuth(this)" id="keyed_auth">Auth with Imagination</button>
+        </div>
+        <hr>
+        <a href="/registerPubKey">Restore a forgotten key for this POC</a>
+        <script src="/imagination.js"></script>
+        <script>
+            function keyHash(k1) {
+                let hash = 0;
+                for (let i = 0; i < k1.length; i++) {
+                    hash = (hash << 9) - hash + k1.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                hash = hash.toString(16);
+                hash = hash.replaceAll("-", "").padStart(Math.ceil(hash.length / 8) * 8, "0").split("", 16).join("").match(/.{1,2}/g).join(":").toUpperCase();
+                return hash;
+            }
+            function imaginationAuth(el) {
+                el.disabled = true;
+                pubkey.disabled = true;
+                privkey.disabled = true;
+                keyless_auth.disabled = true;
+                let reader = new FileReader();
+                reader.readAsText(pubkey.files[0]);
+                reader.onload = async function(event) {
+                    const pubkey_data = event.target.result;
+                    localStorage.setItem("pubk", pubkey_data);
+                    let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
+                    if (!result.ok) {
+                        alert("error in RSAAuth:\n" + await result.text())
+                        el.disabled = false;
+                        pubkey.disabled = false;
+                        privkey.disabled = false;
+                        keyless_auth.disabled = false;
+                        return;
+                    }
+                    reader = new FileReader();
+                    reader.readAsText(privkey.files[0]);
+                    reader.onload = async function(event) {
+                        const privkey_data = event.target.result;
+                        localStorage.setItem("privk", privkey_data);
+                        let keyp = await importKeyPair(pubkey_data, privkey_data);
+                        try {
+                            let token = await decryptRSA(base64ToArrayBuffer(await result.text()), keyp.privateKey);
+                            location.href = "/?token=" + encodeURIComponent(token);
+                        } catch (e) {
+                            alert("error in RSAAuth decryption:\n" + e.toString());
+                        }
+                    }
+                };
+            }
+            async function imaginationAuthWithoutKey(el) {
+                el.disabled = true;
+                pubkey.disabled = true;
+                privkey.disabled = true;
+                keyed_auth.disabled = true;
+                let pubkey_data = localStorage.getItem("pubk");
+                let privkey_data = localStorage.getItem("privk");
+                let keyp = await importKeyPair(pubkey_data, privkey_data);
+                let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
+                if (!result.ok) {
+                    alert("error in RSAAuth:\n" + await result.text())
+                    el.disabled = false;
+                    pubkey.disabled = false;
+                    privkey.disabled = false;
+                    keyed_auth.disabled = false;
+                    return;
+                }
+                let token = await decryptRSA(base64ToArrayBuffer(await result.text()), keyp.privateKey);
+                location.href = "/?token=" + encodeURIComponent(token);
+            }
+            let notifiedOfInsecure = false;
+            setInterval(function() {
+                keyed_auth.disabled = false;
+                keyless_auth.disabled = false;
+                if (!pubkey.files[0] || !privkey.files[0]) keyed_auth.disabled = true;
+                if (!localStorage.getItem("pubk") || !localStorage.getItem("privk")) keyless_auth.disabled = true;
+                if (!isSecureContext) {
+                    keyed_auth.disabled = true;
+                    keyless_auth.disabled = true;
+                    if (!notifiedOfInsecure) {
+                        notifiedOfInsecure = true;
+                        alert("You are running in an insecure context (not HTTPS and not localhost). Please run in a secure context.");
+                    }
+                }
+            });
+
+            function openKeyed(el) {
+                el.remove();
+                keyed_auth_container.hidden = false;
+            }
+
+            if (localStorage.getItem("pubk") && localStorage.getItem("privk")) {
+                keyless_auth_container.hidden = false;
+                keyed_auth_container.hidden = true;
+                prevKeyId.innerText = keyHash(localStorage.getItem("pubk") + localStorage.getItem("privk"));
+            }
+        </script>
+    </body>
+</html>

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>RSA Auth PubKey Uploader</title>
+    </head>
+    <body>
+        <a href="/">Back to logon</a>
+        <hr>
+        Register your key!
+        <br>
+        <button onclick="useImagination(this)" id="imaginationGenerator">Use Imagination (RSA key generator)</button> 
+        <br>
+        Key ID: <label id="hash"></label>
+        <br>
+        OR
+        <br>
+        <form action="/registerPubKey">
+            <input name="pubkey" placeholder="Input your pubkey" required></input>
+            <button>Register</button>
+        </form>
+        <script src="/imagination.js"></script>
+        <script>
+            function keyHash(k1) {
+                let hash = 0;
+                for (let i = 0; i < k1.length; i++) {
+                    hash = (hash << 9) - hash + k1.charCodeAt(i);
+                    hash = hash & hash;
+                }
+                hash = hash.toString(16);
+                hash = hash.replaceAll("-", "").padStart(Math.ceil(hash.length / 8) * 8, "0").split("", 16).join("").match(/.{1,2}/g).join(":").toUpperCase();
+                return hash;
+            }
+            async function useImagination(el) {
+                el.disabled = true;
+                onbeforeunload = () => false;
+                alert("Only get back to logon as soon as the button re-enables.");
+                let newkeypair = await generateKeyPair();
+                newkeypair = await exportKeyPair(newkeypair);
+                localStorage.setItem('privk', newkeypair.privateKeyPem);
+                localStorage.setItem('pubk', newkeypair.publicKeyPem);
+                let blob = new Blob([newkeypair.privateKeyPem], { type: 'text/plain' });
+                let url = URL.createObjectURL(blob);
+                let link = document.createElement('a');
+                link.href = url;
+                link.download = 'KEEP_SECRET.key';
+                link.click();
+                URL.revokeObjectURL(url);
+                blob = new Blob([newkeypair.publicKeyPem], { type: 'text/plain' });
+                url = URL.createObjectURL(blob);
+                link = document.createElement('a');
+                link.href = url;
+                link.download = 'SEND_TO_SERVER.key';
+                link.click();
+                URL.revokeObjectURL(url);
+                await fetch("/registerPubKey?pubkey=" + encodeURIComponent(newkeypair.publicKeyPem));
+                hash.innerText = keyHash(newkeypair.publicKeyPem + newkeypair.privateKeyPem);
+                el.disabled = false;
+                onbeforeunload = null;
+            }
+            setInterval(function() {
+                if (!isSecureContext) {
+                    imaginationGenerator.disabled = true;
+                    if (!notifiedOfInsecure) {
+                        notifiedOfInsecure = true;
+                        alert("You are running in an insecure context (not HTTPS and not localhost). Please run in a secure context.");
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
