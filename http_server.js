@@ -28,7 +28,11 @@ app.get("/getEncryptedSecret", function(req, res) {
     } catch {
         res.status(500).send("Something went terribly wrong when encrypting the secret token");
     }
-})
+});
+
+app.get("/sjcl.js", function(req, res) {
+    res.sendFile(__dirname + "/sjcl.js");
+});
 
 app.listen(3000, function() {
     console.log("It took years of preparation to finally do this POC.");

@@ -20,6 +20,7 @@
         </div>
         <hr>
         <a href="/registerPubKey">Restore a forgotten key for this POC</a>
+        <script src="/sjcl.js"></script>
         <script src="/imagination.js"></script>
         <script>
             function keyHash(k1) {
@@ -73,7 +74,6 @@
                 keyed_auth.disabled = true;
                 let pubkey_data = localStorage.getItem("pubk");
                 let privkey_data = localStorage.getItem("privk");
-                let keyp = await importKeyPair(pubkey_data, privkey_data);
                 let result = await fetch("/getEncryptedSecret?pubkey=" + encodeURIComponent(pubkey_data));
                 if (!result.ok) {
                     alert("error in RSAAuth: " + result.statusText + "\n" + await result.text())
@@ -83,8 +83,29 @@
                     keyed_auth.disabled = false;
                     return;
                 }
-                let token = await decryptRSA(base64ToArrayBuffer(await result.text()), keyp.privateKey);
-                location.href = "/?token=" + encodeURIComponent(token);
+                if (privkey_data.startsWith("encrypted:")) {
+                    let password = prompt("Enter your passphrase, then press Enter:");
+                    if (!password) {
+                        alert("error in RSAAuth: not decrypted\nThe key was not decrypted due to not entering a password.");
+                        el.disabled = false;
+                        pubkey.disabled = false;
+                        privkey.disabled = false;
+                        keyed_auth.disabled = false;
+                        return;
+                    }
+                    try {
+                        privkey_data = sjcl.decrypt(password, privkey_data.replace("encrypted:", ""));
+                    } catch (e) {
+                        alert("error in RSAAuth key decryption:\n" + e.toString());
+                    }
+                }
+                let keyp = await importKeyPair(pubkey_data, privkey_data);
+                try {
+                    let token = await decryptRSA(base64ToArrayBuffer(await result.text()), keyp.privateKey);
+                    location.href = "/?token=" + encodeURIComponent(token);
+                } catch (e) {
+                    alert("error in RSAAuth decryption:\n" + e.toString());
+                }
             }
             let notifiedOfInsecure = false;
             setInterval(function() {
