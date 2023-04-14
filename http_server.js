@@ -14,7 +14,7 @@ app.get("/registerPubKey", function(req, res) {
 });
 
 app.get("/imagination.js", function(req, res) {
-    res.sendFile(__dirname + "/RSADecEnc.js");
+    res.sendFile(__dirname + "/Imagination.js");
 });
 
 app.get("/getEncryptedSecret", function(req, res) {

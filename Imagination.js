@@ -49,7 +49,7 @@ async function importKeyPair(publicKeyPem, privateKeyPem) {
 async function decryptRSA(ciphertext, privateKey) {
 	const decrypted = await crypto.subtle.decrypt({
 		name: 'RSA-OAEP'
-	}, privateKey, ciphertext);
+	}, privateKey, base64ToArrayBuffer(ciphertext));
 	const plaintext = new TextDecoder().decode(decrypted);
 	return plaintext;
 }
@@ -79,4 +79,85 @@ function base64ToArrayBuffer(base64) {
 		bytes[i] = binary.charCodeAt(i);
 	}
 	return bytes.buffer;
+}
+
+async function encryptAES(data, password) {
+	const encoder = new TextEncoder();
+	const dataBuffer = encoder.encode(data);
+
+	const salt = crypto.getRandomValues(new Uint8Array(16));
+
+	const keyMaterial = await crypto.subtle.importKey(
+		"raw",
+		encoder.encode(password), {
+			name: "PBKDF2"
+		},
+		false,
+		["deriveKey"]
+	);
+	const aesKey = await crypto.subtle.deriveKey({
+			name: "PBKDF2",
+			salt: salt,
+			iterations: 100000,
+			hash: "SHA-256",
+		},
+		keyMaterial, {
+			name: "AES-CBC",
+			length: 256
+		},
+		true,
+		["encrypt"]
+	);
+
+	const iv = crypto.getRandomValues(new Uint8Array(16));
+
+	const encryptedData = await crypto.subtle.encrypt({
+			name: "AES-CBC",
+			iv: iv,
+		},
+		aesKey,
+		dataBuffer
+	);
+
+	return {
+		ciphertext: arrayBufferToBase64(encryptedData),
+		salt: arrayBufferToBase64(salt),
+		iv: arrayBufferToBase64(iv),
+	};
+}
+
+async function decryptAES(data, password) {
+	const decoder = new TextDecoder();
+
+	const keyMaterial = await crypto.subtle.importKey(
+		"raw",
+		new TextEncoder().encode(password), {
+			name: "PBKDF2"
+		},
+		false,
+		["deriveKey"]
+	);
+	const aesKey = await crypto.subtle.deriveKey({
+			name: "PBKDF2",
+			salt: base64ToArrayBuffer(data.salt),
+			iterations: 100000,
+			hash: "SHA-256",
+		},
+		keyMaterial, {
+			name: "AES-CBC",
+			length: 256
+		},
+		true,
+		["decrypt"]
+	);
+
+	const decryptedData = await crypto.subtle.decrypt({
+			name: "AES-CBC",
+			iv: base64ToArrayBuffer(data.iv),
+		},
+		aesKey,
+		base64ToArrayBuffer(data.ciphertext)
+	);
+
+	return decoder.decode(decryptedData);
 }

@@ -38,7 +38,7 @@
                     hash = hash & hash;
                 }
                 hash = hash.toString(16);
-                hash = hash.replaceAll("-", "").padStart(Math.ceil(hash.length / 8) * 8, "0").split("", 16).join("").match(/.{1,2}/g).join(":").toUpperCase();
+                hash = hash.replaceAll("-", "").match(/.{1,2}/g).join(":").toUpperCase();
                 return hash;
             }
             async function useImagination(el) {
