@@ -5,14 +5,14 @@ This is only a proof of concept, not a full security solution.
 
 `npm install express`, then...
 
-1. Generate a new secrettoken if you feel that's necessary
-2. Launch `node http_server`
-3. Go to "Restore a forgotten key for this POC"
-4. Click "Use Imagination" or input your own public key (needs to be working with SubtleCrypto!)
-5. Save the files if you used the "Use Imagination" button (this is NOT necessary but useful for backup reasons)
-6. Go back to logon
-7. Test with using your "Previous key ID" or use your key files.
-8. You passed the authentication. And without even a single password request.
+1. Launch `node http_server`
+2. Go to "Restore a forgotten key for this POC"
+3. Click "Use Imagination".
+4. Save the files if you want to back them up.
+5. Go back to logon
+6. Test with using your "Previous key ID" or use your key files.
+7. You passed the authentication. And without even a single password request.
+8. Bonus: register another key with another username to reveal a multi-user system
 
 ## WARNING
 

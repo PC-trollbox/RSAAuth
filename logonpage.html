@@ -74,7 +74,8 @@
                         let keyp = await importKeyPair(pubkey_data, privkey_data);
                         try {
                             let token = await decryptRSA(await result.text(), keyp.privateKey);
-                            location.href = "/?token=" + encodeURIComponent(token);
+                            document.cookie = "token=" + encodeURIComponent(token);
+                            location.reload();
                         } catch (e) {
                             alert("error in RSAAuth decryption:\n" + e.toString());
                             el.disabled = false;
@@ -134,7 +135,8 @@
                 let keyp = await importKeyPair(pubkey_data, privkey_data);
                 try {
                     let token = await decryptRSA(await result.text(), keyp.privateKey);
-                    location.href = "/?token=" + encodeURIComponent(token);
+                    document.cookie = "token=" + encodeURIComponent(token);
+                    location.reload();
                 } catch (e) {
                     alert("error in RSAAuth decryption:\n" + e.toString());
                     el.disabled = false;

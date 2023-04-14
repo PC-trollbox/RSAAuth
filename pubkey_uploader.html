@@ -9,16 +9,11 @@
         <hr>
         Register your key!
         <br>
-        <button onclick="useImagination(this)" id="imaginationGenerator">Use Imagination (RSA key generator)</button> 
+        Username: <input id="userName" placeholder="Input your username..." required></input>
+        <br>
+        <button onclick="useImagination(this)" id="imaginationGenerator">Register automatically with Imagination</button> 
         <br>
         Key ID: <label id="hash"></label>
-        <br>
-        OR
-        <br>
-        <form action="/registerPubKey">
-            <input name="pubkey" placeholder="Input your pubkey" required></input>
-            <button>Register</button>
-        </form>
         <div hidden id="overlay"></div>
         <div id="modal_window" hidden>
             <center>
@@ -42,11 +37,12 @@
                 return hash;
             }
             async function useImagination(el) {
+                if (!userName.value) return alert("Please input a username!");
+                userName.disabled = true;
                 el.disabled = true;
                 overlay.hidden = false;
                 modal_window.hidden = false;
                 onbeforeunload = () => false;
-                alert("Only get back to logon as soon as the button re-enables.");
                 let newkeypair = await generateKeyPair();
                 newkeypair = await exportKeyPair(newkeypair);
                 localStorage.setItem('privk', newkeypair.privateKeyPem);
@@ -65,11 +61,21 @@
                 link.download = 'SEND_TO_SERVER.key';
                 link.click();
                 URL.revokeObjectURL(url);
-                await fetch("/registerPubKey?pubkey=" + encodeURIComponent(newkeypair.publicKeyPem));
+                await fetch("/registerPubKey", {
+                    method: "POST",
+                    body: JSON.stringify({
+                        pubkey: newkeypair.publicKeyPem,
+                        username: userName.value,
+                    }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
                 hash.innerText = keyHash(newkeypair.publicKeyPem + newkeypair.privateKeyPem);
                 el.disabled = false;
                 overlay.hidden = true;
                 modal_window.hidden = true;
+                userName.disabled = false;
                 onbeforeunload = null;
             }
             setInterval(function() {
