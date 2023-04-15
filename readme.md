@@ -14,6 +14,7 @@ This is only a proof of concept, not a full security solution.
 7. You passed the authentication. And without even a single password request.
 8. Bonus: register another key with another username to reveal a multi-user system
 
-## WARNING
+## SSL certificates
+Launch `create-crt` or `create-crt.bat` (openssl required). Please, please don't rely on the version in the `openssl-win` folder, unless you really don't care about security. You can download your own version into the `openssl-win` or just remove the `openssl-win` folder from the execution if you already have OpenSSL. Skip that step if you don't want creating doing HTTPS access.
 
-If you try using LAN, well... you have to set up some kind of port thing or proxy, idk. Or get HTTPS. Because SubtleCrypto features are limited to secure contexts, you need to use HTTPS or localhost.
+Note: software in `openssl-win` was downloaded at https://sourceforge.net/projects/openssl-for-windows/ .

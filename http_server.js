@@ -3,6 +3,7 @@ const fs = require("fs");
 const crypto = require("crypto");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
+
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
@@ -80,5 +81,15 @@ app.get("/style.css", function(req, res) {
 });
 
 app.listen(3000, function() {
-    console.log("It took years of preparation to finally do this POC.");
+    console.log("It took years of preparation to finally do this POC. (HTTP at :3000)");
 });
+if (fs.existsSync(__dirname + "/key-crt")) {
+    console.log("key-crt folder exists, so launching with HTTPS");
+    const https = require("https").Server({
+        key: fs.readFileSync(__dirname + "/key-crt/localhost.key"),
+        cert: fs.readFileSync(__dirname + "/key-crt/localhost.crt"),
+    }, app);
+    https.listen(3001, function() {
+        console.log("HTTPS at :3001 open");
+    });
+} else console.warn("key-crt does not exist! Use create-crt tool to allow non-localhost access.");
