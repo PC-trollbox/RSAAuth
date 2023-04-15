@@ -78,6 +78,7 @@
                 userName.disabled = false;
                 onbeforeunload = null;
             }
+            let notifiedOfInsecure = false;
             setInterval(function() {
                 if (!isSecureContext) {
                     imaginationGenerator.disabled = true;
