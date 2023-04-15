@@ -15,6 +15,6 @@ This is only a proof of concept, not a full security solution.
 8. Bonus: register another key with another username to reveal a multi-user system
 
 ## SSL certificates
-Launch `create-crt` or `create-crt.bat` (openssl required). Please, please don't rely on the version in the `openssl-win` folder, unless you really don't care about security. You can download your own version into the `openssl-win` or just remove the `openssl-win` folder from the execution if you already have OpenSSL. Skip that step if you don't want creating doing HTTPS access.
+Launch `create-crt` or `create-crt.bat` (openssl required).
 
-Note: software in `openssl-win` was downloaded at https://sourceforge.net/projects/openssl-for-windows/ .
+You can download OpenSSL at https://sourceforge.net/projects/openssl-for-windows/ .
