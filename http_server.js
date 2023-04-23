@@ -80,6 +80,10 @@ app.get("/style.css", function(req, res) {
     res.sendFile(__dirname + "/style.css");
 });
 
+app.get("/gui.js", function(req, res) {
+    res.sendFile(__dirname + "/gui.js");
+});
+
 app.listen(3000, function() {
     console.log("It took years of preparation to finally do this POC. (HTTP at :3000)");
 });
