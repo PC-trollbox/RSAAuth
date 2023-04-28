@@ -11,9 +11,7 @@
         <br>
         Username: <input id="userName" placeholder="Input your username..." required></input>
         <br>
-        <button onclick="useImagination(this)" id="imaginationGenerator">Register automatically with Imagination</button> 
-        <br>
-        Key ID: <label id="hash"></label>
+        <button onclick="useImagination()" id="imaginationGenerator">Register with Imagination security</button>
         <div hidden id="overlay"></div>
         <div id="modal_window" hidden>
             <center>
@@ -26,41 +24,23 @@
         </div>
         <script src="/imagination.js"></script>
         <script>
-            function keyHash(k1) {
-                let hash = 0;
-                for (let i = 0; i < k1.length; i++) {
-                    hash = (hash << 9) - hash + k1.charCodeAt(i);
-                    hash = hash & hash;
-                }
-                hash = hash.toString(16);
-                hash = hash.replaceAll("-", "").match(/.{1,2}/g).join(":").toUpperCase();
-                return hash;
-            }
-            async function useImagination(el) {
-                if (!userName.value) return alert("Please input a username!");
+            function openOverlay() {
                 userName.disabled = true;
-                el.disabled = true;
                 overlay.hidden = false;
                 modal_window.hidden = false;
                 onbeforeunload = () => false;
-                let newkeypair = await generateKeyPair();
-                newkeypair = await exportKeyPair(newkeypair);
-                localStorage.setItem('privk', newkeypair.privateKeyPem);
-                localStorage.setItem('pubk', newkeypair.publicKeyPem);
-                let blob = new Blob([newkeypair.privateKeyPem], { type: 'text/plain' });
-                let url = URL.createObjectURL(blob);
-                let link = document.createElement('a');
-                link.href = url;
-                link.download = 'KEEP_SECRET.key';
-                link.click();
-                URL.revokeObjectURL(url);
-                blob = new Blob([newkeypair.publicKeyPem], { type: 'text/plain' });
-                url = URL.createObjectURL(blob);
-                link = document.createElement('a');
-                link.href = url;
-                link.download = 'SEND_TO_SERVER.key';
-                link.click();
-                URL.revokeObjectURL(url);
+            }
+            function closeOverlayWithError(err) {
+                overlay.hidden = true;
+                modal_window.hidden = true;
+                userName.disabled = false;
+                onbeforeunload = null;
+                if (err) alert("Registration failed:\n" + err.toString());
+            }
+
+            async function useImagination(el) {
+                if (!userName.value) return alert("Please input a username!");
+                let newkeypair = await imagination.gui.imaginationPubkeyFrontend(openOverlay, closeOverlayWithError, localStorage);
                 await fetch("/registerPubKey", {
                     method: "POST",
                     body: JSON.stringify({
@@ -71,13 +51,9 @@
                         "Content-Type": "application/json"
                     }
                 });
-                hash.innerText = keyHash(newkeypair.publicKeyPem + newkeypair.privateKeyPem);
-                el.disabled = false;
-                overlay.hidden = true;
-                modal_window.hidden = true;
-                userName.disabled = false;
-                onbeforeunload = null;
+                await imagination.gui.backupKeys([], prompt, false, localStorage);
             }
+
             let notifiedOfInsecure = false;
             setInterval(function() {
                 if (!isSecureContext) {

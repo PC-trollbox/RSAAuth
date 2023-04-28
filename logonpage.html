@@ -8,14 +8,14 @@
         <h1>Imagination Auth</h1>
         <br>
         <div hidden id="keyless_auth_container">
-            <button onclick="imaginationAuthWithoutKey(this)" id="keyless_auth">Auth with Imagination automatically</button>
+            <button onclick="imaginationAuthWithoutKey()" id="keyless_auth">Auth with Imagination automatically</button>
             <hr>
             <button onclick="openKeyed(this)">Use other keys</button>
         </div>
         <div id="keyed_auth_container">
             Insert a public key (labelled SEND_TO_SERVER.key): <input type="file" id="pubkey"> <br>
             Insert a private key (labelled KEEP_SECRET.key): <input type="file" id="privkey"> <br>
-            <button onclick="imaginationAuth(this)" id="keyed_auth">Auth with Imagination</button>
+            <button onclick="imaginationAuth()" id="keyed_auth">Auth with Imagination</button>
         </div>
         <hr>
         <a href="/registerPubKey">Restore a forgotten key for this POC</a>
@@ -47,15 +47,15 @@
                 keyed_auth.disabled = false;
                 overlay.hidden = true;
                 modal_window.hidden = true;
-                if (err) alert("Logon failed:\n" + err);
+                if (err) alert("Logon failed:\n" + err.toString());
             }
 
             function imaginationAuthWithoutKey() {
-                imaginationAuthGUI([], openOverlay, prompt, closeOverlayWithError);
+                imagination.gui.imaginationAuthGUI([], openOverlay, prompt, closeOverlayWithError, localStorage);
             }
 
             function imaginationAuth() {
-                imaginationAuthGUI([pubkey.files[0], privkey.files[0]], openOverlay, prompt, closeOverlayWithError);
+                imagination.gui.imaginationAuthGUI([pubkey.files[0], privkey.files[0]], openOverlay, prompt, closeOverlayWithError, localStorage);
             }
 
             function openKeyed(el) {
@@ -63,7 +63,7 @@
                 keyed_auth_container.hidden = false;
             }
 
-            if (isKeySaved()) {
+            if (imagination.gui.isKeySaved()) {
                 keyless_auth_container.hidden = false;
                 keyed_auth_container.hidden = true;
             }
@@ -73,7 +73,7 @@
                 keyed_auth.disabled = false;
                 keyless_auth.disabled = false;
                 if (!pubkey.files[0] || !privkey.files[0]) keyed_auth.disabled = true;
-                if (!localStorage.getItem("pubk") || !localStorage.getItem("privk")) keyless_auth.disabled = true;
+                if (!imagination.gui.isKeySaved(localStorage)) keyless_auth.disabled = true;
                 if (!isSecureContext) {
                     keyed_auth.disabled = true;
                     keyless_auth.disabled = true;
