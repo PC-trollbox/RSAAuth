@@ -39,7 +39,7 @@
                 if (err) alert("Registration failed:\n" + err.toString());
             }
 
-            async function useImagination(el) {
+            async function useImagination() {
                 if (!userName.value) return alert("Please input a username!");
                 let newkeypair = await imagination.gui.imaginationPubkeyFrontend(openOverlay, closeOverlayWithError, localStorage);
                 await fetch("/registerPubKey", {
